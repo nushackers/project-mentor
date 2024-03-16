@@ -37,6 +37,14 @@ class BaseEmail(ABC):
     def filter_fn(self, row: Spreadsheet.Row):
         pass
 
+    def prepare_update_data(self, header: str, rows: List[Spreadsheet.Row], updated_value: str):
+        status_column_letter = self.sheet.get_header_letter(header)
+        data = []
+        for i in range(len(rows)):
+            range_name = f'{self.sheet.sheet_name}!{status_column_letter}{rows[i].index}'
+            data.append((range_name, updated_value))
+        return data
+
     def send(self, email_template_name: str, subject: str, cc: List[str] = []):
         filtered_rows = [row for row in self.sheet.rows if self.filter_fn(row)]
 

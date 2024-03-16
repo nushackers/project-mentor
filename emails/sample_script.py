@@ -1,4 +1,3 @@
-
 from typing import List
 from tool.base_email import BaseEmail
 from tool.spreadsheet import Spreadsheet
@@ -22,11 +21,7 @@ class SampleEmail(BaseEmail):
         return row.values['Status'] == 'Pending'
 
     def on_send(self, rows: List[Spreadsheet.Row]):
-        status_column_letter = self.sheet.get_header_letter('Status')
-        data = []
-        for i in range(len(rows)):
-            range_name = f'{self.sheet.sheet_name}!{status_column_letter}{rows[i].index}'
-            data.append((range_name, 'Invite Sent'))
+        data = self.prepare_update_data('Status', rows, 'Invite Sent')
         self.wrapper.update_spreadsheet_values(self.spreadsheet_id, data)
 
     def render_content(self, row: Spreadsheet.Row):
