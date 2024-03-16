@@ -62,6 +62,37 @@ Create a Python script and initialize a class that extends `BaseEmail`. Implemen
 - `on_send` - action to be performed on all successfully sent rows
 - `filter_fn` - filters the rows to send an email for
 
+Create a corresponding HTML template in `templates/` where any variables to be injected is wrapped with `{{ }}`:
+
+```html
+Hi {{ first_name }} {{ last_name }},
+
+On behalf of NUS Hackers and the Student Life Office, thank you for your application to be a mentor for Project Mentor AY23/24. Project Mentor hopes to enrich the lives of the freshmen of the School of Computing (SoC) by pairing them with mentors to help them navigate their first year in SoC
+
+We would like to arrange a quick <strong>15 minute</strong> chat with you between <u>1 August to 10 August</u> to get to know you and understand your priorities and goals as a mentor. It is not a formal session so don't worry about having the right answers, just be yourself!
+
+<strong>Interview details</strong>
+Interviewer: {{ assigned_interviewer }} ({{ assigned_interviewer_email }})
+Book your session: {{ assigned_interviewer_calendly }}
+
+If you have any questions, feel free to reach out to mentorship2023@nushackers.org
+
+Once again, thank you for your interest in being a mentor and we are excited to meet you!
+
+Regards,
+Jiahao
+NUS Hackers Coreteam
+```
+
+Then, initialize the class and call `send(email_template_path, subject, cc=[])`:
+
+```python
+spreadsheet_id = ''
+sheet_name = ''
+sheet_range = ''
+SampleEmail(spreadsheet_id, sheet_name, sheet_range).send('sample_email.html', 'This is a test')
+```
+
 For a sample implementation, refer to `sample_script.py`:
 
 ```python
