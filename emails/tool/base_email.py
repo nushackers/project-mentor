@@ -1,9 +1,17 @@
 from abc import ABC, abstractmethod
 from typing import List
 
+from jinja2 import Environment, FileSystemLoader
+
 from tool.google_api_wrapper import GoogleApiWrapper
 from tool.spreadsheet import Spreadsheet
 
+class EmailDetails:
+    def __init__(self, to: str, subject: str, cc: str, body: str):
+        self.to = to
+        self.subject = subject
+        self.cc = cc
+        self.body = body
 
 class BaseEmail(ABC):
     def __init__(self, spreadsheet_id: str, sheet_name: str, sheet_range: str):
@@ -32,14 +40,19 @@ class BaseEmail(ABC):
     def send(self, email_template_name: str, subject: str, cc: List[str] = []):
         filtered_rows = [row for row in self.sheet.rows if self.filter_fn(row)]
 
-        successful_rows = self.wrapper.send_emails(
-            subject=subject,
-            cc=cc,
-            email_template_name=email_template_name,
-            rows=filtered_rows,
-            render_content=self.render_content,
-            get_email=self.get_email
-        )
+        template_loader = FileSystemLoader(searchpath='templates/')
+        template_env = Environment(loader=template_loader)
+        template = template_env.get_template(email_template_name)
+
+        data = {}
+        for row in filtered_rows:
+            data[row] = {
+                'to': self.get_email(row),
+                'subject': subject,
+                'cc': ','.join(cc),
+                'body': template.render(self.render_content(row)).replace('\n', '<br/>'),
+            }
+        successful_rows = self.wrapper.send_emails(data)
 
         self.on_send(successful_rows)
 

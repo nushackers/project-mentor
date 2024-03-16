@@ -18,6 +18,13 @@ class Spreadsheet:
             self.index = index
             self.values = values
 
+        def __eq__(self, other):
+            return isinstance(other, Spreadsheet.Row) and self.index == other.index
+
+        def __hash__(self):
+            return hash(self.index)
+
+
     def __init__(self, spreadsheet_id: str, sheet_name: str, sheet_range: str, values: List[List[str]]):
         """
         Parsing is done by creating a raw Pandas DataFrame of the mapped values as well as

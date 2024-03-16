@@ -7,7 +7,7 @@ format before being passed off to Google App Script to be sent through emails.
 
 import os.path
 from os import getenv
-from typing import Callable, List
+from typing import List
 
 from dotenv import load_dotenv
 from google.auth.transport.requests import Request
@@ -15,7 +15,6 @@ from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient import errors
 from googleapiclient.discovery import build
-from jinja2 import Environment, FileSystemLoader
 
 from tool.spreadsheet import Spreadsheet
 
@@ -90,27 +89,15 @@ class GoogleApiWrapper:
         except errors.HttpError as err:
             print(err)
 
-    def send_emails(
-            self,
-            subject: str,
-            cc: List[str],
-            email_template_name: str,
-            rows: List[Spreadsheet.Row],
-            render_content: Callable[[Spreadsheet.Row], dict],
-            get_email: Callable[[Spreadsheet.Row], str]):
-        template_loader = FileSystemLoader(searchpath='templates/')
-        template_env = Environment(loader=template_loader)
-        template = template_env.get_template(email_template_name)
-
+    def send_emails(self, data: dict):
         successful_rows = []
 
-        for row in rows:
-            output = template.render(render_content(row)).replace('\n', '<br/>')
+        for row, values in data.items():
             try:
                 service = build('script', 'v1', credentials=self.creds)
                 request = {
                     'function': 'sendMail',
-                    'parameters': [get_email(row), subject, output, ','.join(cc)]
+                    'parameters': [values['to'], values['subject'], values['body'], values['cc']]
                 }
                 response = service.scripts().run(scriptId=self.mailer_key, body=request).execute()
                 if 'error' in response:
