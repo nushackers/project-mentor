@@ -41,6 +41,12 @@ Navigate to this sub-folder:
 cd emails/
 ```
 
+Add your deployment key for AppScript by copying `.env.example` to `.env`:
+
+```env
+MAILER_DEPLOYMENT_KEY=
+```
+
 Then, start the environment:
 
 ```bash
