@@ -95,22 +95,16 @@ class GoogleApiWrapper:
             subject: str,
             cc: List[str],
             email_template_name: str,
-            spreadsheet: Spreadsheet,
+            rows: List[Spreadsheet.Row],
             render_content: Callable[[Spreadsheet.Row], dict],
-            get_email: Callable[[Spreadsheet.Row], str],
-            filter_fn: Callable[[Spreadsheet.Row], bool],
-            on_send: Callable[[List[Spreadsheet.Row]], None]):
+            get_email: Callable[[Spreadsheet.Row], str]):
         template_loader = FileSystemLoader(searchpath='templates/')
         template_env = Environment(loader=template_loader)
         template = template_env.get_template(email_template_name)
 
         successful_rows = []
 
-        for row in spreadsheet.rows:
-            if not filter_fn(row):
-                # Skip if filter condition not met
-                continue
-
+        for row in rows:
             output = template.render(render_content(row)).replace('\n', '<br/>')
             try:
                 service = build('script', 'v1', credentials=self.creds)
@@ -127,11 +121,4 @@ class GoogleApiWrapper:
             except errors.HttpError as err:
                 print(err)
 
-        on_send(successful_rows)
-
-        print('All emails sent where possible')
-        print(f'Successfully sent to {", ".join([str(r.index) for r in successful_rows])}')
-
-
-
-
+        return successful_rows

@@ -13,7 +13,6 @@ class BaseEmail(ABC):
         self.wrapper = GoogleApiWrapper()
         self.sheet = self.wrapper.get_spreadsheet(self.spreadsheet_id, self.sheet_name, self.sheet_range)
 
-
     @abstractmethod
     def render_content(self, row: Spreadsheet.Row):
         pass
@@ -31,13 +30,20 @@ class BaseEmail(ABC):
         pass
 
     def send(self, email_template_name: str, subject: str, cc: List[str] = []):
-        self.wrapper.send_emails(
+        filtered_rows = [row for row in self.sheet.rows if self.filter_fn(row)]
+
+        successful_rows = self.wrapper.send_emails(
             subject=subject,
             cc=cc,
             email_template_name=email_template_name,
-            spreadsheet=self.sheet,
+            rows=filtered_rows,
             render_content=self.render_content,
-            get_email=self.get_email,
-            filter_fn=self.filter_fn,
-            on_send=self.on_send
+            get_email=self.get_email
         )
+
+        self.on_send(successful_rows)
+
+        print('All emails sent where possible')
+        print(f'Successfully sent to {", ".join([str(r.index) for r in successful_rows])}')
+
+
