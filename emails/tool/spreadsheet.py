@@ -1,7 +1,7 @@
 from typing import List
 import pandas as pd
 
-from email_utility.utils import from_base26, to_base26
+from tool.utils import from_base26, to_base26
 
 class Spreadsheet:
     """
@@ -18,22 +18,20 @@ class Spreadsheet:
             self.index = index
             self.values = values
 
-    def __init__(
-            self,
-            sheet_range: str,
-            values: List[List[str]],
-            mapping: dict):
+    def __init__(self, spreadsheet_id: str, sheet_name: str, sheet_range: str, values: List[List[str]]):
         """
         Parsing is done by creating a raw Pandas DataFrame of the mapped values as well as
         maintaining metadata about the column and row mapping for ease of use when writing back to
         Google Sheets.
         """
+        self.spreadsheet_id = spreadsheet_id
+        self.sheet_name = sheet_name
+        self.sheet_range = sheet_range
 
         df = pd.DataFrame(values)
         df.columns = df.iloc[0]
         df = df[1:]
         df = df.reset_index(drop=True)
-        df = df.rename(columns=mapping)
 
         self.range = self.parse_range(sheet_range)
         self.headers = [
@@ -47,10 +45,13 @@ class Spreadsheet:
                 self.get_sheet_range_rows(self.range[0][1], self.range[1][1]),
                 [row for i, row in df.iterrows()])]
 
-        unused = set(df.columns) - mapping.keys() - set(mapping.values())
-        # Remove all mapped keys and their corresponding mapping since we've already renamed them
-        df = df.drop(list(unused))
         self.sheet = df
+
+    def get_header_letter(self, header: str):
+        for h in self.headers:
+            if h.title == header:
+                return h.index
+        return None
 
     def parse_range(self, sheet_range: str):
         def parse_col(s):
@@ -78,7 +79,8 @@ class Spreadsheet:
 
     def get_sheet_range_rows(self, start_row: int, end_row: int):
         sheet_range_rows = []
-        for i in range(start_row, end_row + 1):
+        for i in range(start_row + 1, end_row + 1):
+            # Skip first row as header
             sheet_range_rows.append(i)
         return sheet_range_rows
 
