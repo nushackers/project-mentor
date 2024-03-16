@@ -1,6 +1,6 @@
 
 from typing import List
-from tool.google_api_wrapper import GoogleApiWrapper
+from tool.base_email import BaseEmail
 from tool.spreadsheet import Spreadsheet
 
 interviewers = {
@@ -14,17 +14,22 @@ interviewers = {
   },
 };
 
-def main():
-    spreadsheet_id = '1DCm5GX0DvyNi4W_2PttBHz0Fnsxo5VeakpvIGCEoOr8'
-    sheet_name = 'Sheet1'
-    sheet_range = 'A1:F3'
+class SampleEmail(BaseEmail):
+    def get_email(self, row: Spreadsheet.Row):
+        return row.values['Email']
 
-    wrapper = GoogleApiWrapper()
+    def filter_fn(self, row: Spreadsheet.Row):
+        return row.values['Status'] == 'Pending'
 
-    # This is a sample Google Sheet, replace this with whatever code you use
-    sheet = wrapper.get_spreadsheet(spreadsheet_id, sheet_name, sheet_range)
+    def on_send(self, rows: List[Spreadsheet.Row]):
+        status_column_letter = self.sheet.get_header_letter('Status')
+        data = []
+        for i in range(len(rows)):
+            range_name = f'{self.sheet.sheet_name}!{status_column_letter}{rows[i].index}'
+            data.append((range_name, 'Invite Sent'))
+        self.wrapper.update_spreadsheet_values(self.spreadsheet_id, data)
 
-    def render_content(row: Spreadsheet.Row):
+    def render_content(self, row: Spreadsheet.Row):
         return {
             'first_name': row.values['First Name'],
             'last_name': row.values['Last Name'],
@@ -33,29 +38,11 @@ def main():
             'assigned_interviewer_calendly': interviewers[row.values['Assigned Interviewer']]['calendly']
         }
 
-    def on_send(rows: List[Spreadsheet.Row]):
-        status_column_letter = sheet.get_header_letter('Status')
-        data = []
-        for i in range(len(rows)):
-            range_name = f'{sheet.sheet_name}!{status_column_letter}{rows[i].index}'
-            data.append((range_name, 'Invite Sent'))
-        print(data)
-        wrapper.update_spreadsheet_values(spreadsheet_id, data)
-
-
-    # This is using my (Jiahao) personal deployment id, but it should be accessible so long as you
-    # are within the NUS Hackers organization
-    wrapper.send_emails(
-        subject='Test email',
-        cc=[],
-        email_template_name='sample_email.html',
-        mailer_deployment_id='AKfycbwAe_N_JCR3s7KJRLuX30ybhX2N0SNua1FiKDbiHbU',
-        spreadsheet=sheet,
-        render_content=render_content,
-        get_email=lambda row: row.values['Email'],
-        filter_fn=lambda row: row.values['Status'] == 'Pending',
-        on_send=on_send
-    )
+def main():
+    spreadsheet_id = '1DCm5GX0DvyNi4W_2PttBHz0Fnsxo5VeakpvIGCEoOr8'
+    sheet_name = 'Sheet1'
+    sheet_range = 'A1:F3'
+    SampleEmail(spreadsheet_id, sheet_name, sheet_range).send('sample_email.html', 'This is a test')
 
 if __name__ == '__main__':
     main()
