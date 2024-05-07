@@ -27,7 +27,8 @@ mentor_df = pd.DataFrame({
 
 # 2. Define similarity functions
 def similarity_mentee_mentor_group(mentors: list, mentee: pd.Series):
-    '''You can define any similarity function you want, as long as you return a number (you might be able to return other comparable objects but I haven't tested it). Smaller is more similar.
+    '''You can define any similarity function you want, as long as you return a number (you might be
+    able to return other comparable objects but I haven't tested it). Smaller is more similar.
     
     Args:
         mentors: list of pd.Series, each representing a mentor
