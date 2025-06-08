@@ -11,7 +11,7 @@ def group_mentors(mentors: pd.DataFrame,
     Args:
         mentors: pd.DataFrame, representing the mentors
         mentors_per_mentee: int, the number of mentors per mentee
-        similarity_func: callable, a function that takes two pd.Series and returns a number. Smaller is more similar.
+        similarity_func: callable, a function that takes two pd.Series and returns a number. Larger is more similar.
     
     Returns:
         dict, mapping mentor group IDs to lists of mentor IDs
@@ -23,7 +23,7 @@ def group_mentors(mentors: pd.DataFrame,
             if mentor_id1 == mentor_id2:
                 similarity_matrix.loc[mentor_id1, mentor_id2] = np.inf
                 continue
-            similarity_matrix.loc[mentor_id1, mentor_id2] = similarity_func(mentors.loc[mentor_id1], mentors.loc[mentor_id2])
+            similarity_matrix.loc[mentor_id1, mentor_id2] = -similarity_func(mentors.loc[mentor_id1], mentors.loc[mentor_id2])
     
     # Cluster mentors
     n_clusters = len(mentors.index) // mentors_per_mentee
@@ -46,7 +46,7 @@ def match_mentees_to_mentor_groups(mentors: pd.DataFrame,
         mentees: pd.DataFrame, representing the mentees
         mentor_groups: dict, mapping mentor group IDs to lists of mentor IDs
         mentees_per_mentor: int, the number of mentees per mentor
-        similarity_func: callable, a function that takes two pd.Series and returns a number. Smaller is more similar.
+        similarity_func: callable, a function that takes two pd.Series and returns a number. Larger is more similar.
         
     Returns:
         pd.DataFrame, representing the assignments from mentor POV.
@@ -56,7 +56,7 @@ def match_mentees_to_mentor_groups(mentors: pd.DataFrame,
     similarity_matrix = pd.DataFrame(index=mentor_groups.keys(), columns=mentees.index)
     for mentor_group_id, mentor_group in mentor_groups.items():
         for mentee_id, mentee in mentees.iterrows():
-            similarity_matrix.loc[mentor_group_id, mentee_id] = similarity_func([mentors.iloc[mentor_id] for mentor_id in mentor_group], mentee)
+            similarity_matrix.loc[mentor_group_id, mentee_id] = -similarity_func([mentors.iloc[mentor_id] for mentor_id in mentor_group], mentee)
 
     assignments = pd.DataFrame(index=mentor_groups.keys(), columns=[f'assigned_{i}' for i in range(mentees_per_mentor)])
 
