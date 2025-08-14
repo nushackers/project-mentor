@@ -73,7 +73,7 @@ def match_mentees_to_mentor_groups(mentors: pd.DataFrame,
             matched_mentee = mentees_pool.index[mentee_id_index]
             matched_mentor_group = list(mentor_groups.keys())[mentor_group_id_index]
 
-            assignments.loc[matched_mentor_group][f'assigned_{round}'] = matched_mentee
+            assignments.loc[matched_mentor_group, f'assigned_{round}'] = matched_mentee
 
         similarity_matrix = similarity_matrix.drop(assignments[f'assigned_{round}'], axis=1)
         mentees_pool = mentees_pool.drop(assignments[f'assigned_{round}'])
