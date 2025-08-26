@@ -28,31 +28,31 @@ mentor_df = pd.DataFrame({
 # 2. Define similarity functions
 def similarity_mentee_mentor_group(mentors: list, mentee: pd.Series):
     '''You can define any similarity function you want, as long as you return a number (you might be
-    able to return other comparable objects but I haven't tested it). Smaller is more similar.
+    able to return other comparable objects but I haven't tested it). Larger is more similar.
     
     Args:
         mentors: list of pd.Series, each representing a mentor
         mentee: pd.Series, representing a single mentee
     '''
     acc = 0
-    acc += sum(
+    acc -= sum( # Penalize any differences (alternatively, you can and should use Word Error Rate for more sensible comparison)
         np.abs(mentor['feat1'] - mentee['feat1'])
         for mentor in mentors
     )
-    acc += sum(
+    acc -= sum( # Penalize any differences (alternatively, you can and should use Word Error Rate for more sensible comparison)
         np.abs(mentor['feat2'] - mentee['feat2'])
         for mentor in mentors
     )
     return acc
 
 def similarity_mentor_mentor(mentor1: pd.Series, mentor2: pd.Series):
-    '''Again, you can define any similarity function you want, as long as you return a number. Smaller is more similar.
+    '''Again, you can define any similarity function you want, as long as you return a number. Larger is more similar.
     
     Args:
         mentor1: pd.Series, representing a single mentor
         mentor2: pd.Series, representing a single mentor
     '''
-    return np.abs(mentor1['feat1'] - mentor2['feat1']) * np.abs(mentor1['feat2'] - mentor2['feat2'])**0.15
+    return -np.abs(mentor1['feat1'] - mentor2['feat1']) * np.abs(mentor1['feat2'] - mentor2['feat2'])**0.15
 
 # 3. Run the matching
 assignments_by_mentor, assignments_by_mentee = manytomany.match(
